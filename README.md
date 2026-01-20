@@ -69,3 +69,13 @@ python repo-setup.py --help
     python repo-setup.py [MOD_NAME_FULL] --undo
     ```
    This removes all the junction shortcuts and moves all the mod directories back to its original location in the game data directory.
+
+### Set up project from repo
+1. Run
+    ```
+    python repo-setup.py [MOD_NAME_FULL] --from-repo
+    ```
+    This creates all the junctions in places pointing to the current repo.
+
+> [!NOTE]
+> If the project isn't showing up on the toolkit, make sure the Project data folder (`/Data/Projects`) and `meta.lsx` are properly in place.
