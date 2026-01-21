@@ -39,13 +39,18 @@ SUB_PATHS = [
 ]
 
 # Move the mod files from the game directory to the repo, and create a junction
-def setup_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path: Path):
+def setup_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path: Path, interactive: bool):
     path_in_game = game_data_path / sub_path / mod_name
     path_in_repo = repo_path / sub_path
 
     if not path_in_game.exists():
         print(f"{path_in_game} does not exist. Skipping.")
         return
+
+    if interactive:
+        confirm = input(f"Move {path_in_game} to {path_in_repo}? (y/n): ").lower()
+        if confirm != "y":
+            return
 
     # Ensure the parent directory exists in the repo
     path_in_repo.parent.mkdir(parents=True, exist_ok=True)
@@ -66,7 +71,7 @@ def setup_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path
         raise RuntimeError(f"Failed to link {path_in_game}")
 
 # Remove the junction and move the files back to the game directory
-def undo_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path: Path):
+def undo_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path: Path, interactive: bool):
     path_in_game = game_data_path / sub_path / mod_name
     path_in_repo = repo_path / sub_path
 
@@ -76,6 +81,11 @@ def undo_junction(mod_name: str, sub_path: str, game_data_path: Path, repo_path:
     if not path_in_repo.exists():
         print(f"{path_in_repo} does not exist. Skipping.")
         return
+
+    if interactive:
+        confirm = input(f"Restore {path_in_repo} to {path_in_game}? (y/n): ").lower()
+        if confirm != "y":
+            return
 
     os.rmdir(path_in_game)
     shutil.move(str(path_in_repo), str(path_in_game))
@@ -92,6 +102,8 @@ def main():
     parser = argparse.ArgumentParser(description="Set up repo by moving the mod files from the game directory and replacing with junctions.")
     parser.add_argument("mod_name", nargs="?",  default=(MOD_NAME_FULL or repo.name),
                         help=f"Name of the mod folder in GAME_DATA_ROOT (default: MOD_NAME_FULL or current directory name)")
+    parser.add_argument("-i", "--interactive", action="store_true",
+                        help="Promopt for confirmation for each action")
     parser.add_argument("--undo", action="store_true",
                         help="Remove junctions and restore the mod files to game path")
     args = parser.parse_args()
@@ -114,11 +126,11 @@ def main():
     # Perform the setup or undo
     if args.undo:
         for sub_path in SUB_PATHS:
-            undo_junction(mod_name, sub_path, game_data_path, repo)
+            undo_junction(mod_name, sub_path, game_data_path, repo, interactive = args.interactive)
         print("\nYour mod files have been restored to the game directory.")
     else:
         for sub_path in SUB_PATHS:
-            setup_junction(mod_name, sub_path, game_data_path, repo)
+            setup_junction(mod_name, sub_path, game_data_path, repo, interactive = args.interactive)
         print("\nYour mod files are now in your repo, and the game is linked to them.")
 
 if __name__ == "__main__":
